@@ -4,6 +4,10 @@
 #include <vector>
 #include <stack>
 #include "haversine_algo.cpp"
+// #include "nested_profiler.cpp"
+
+#define UNIQUE_VAR2(A, B) A##B
+#define UNIQUE_VAR(A, B) UNIQUE_VAR2(A, B)
 
 // static inline uint64_t rdtsc() // this is for x86 arch
 // {
@@ -14,6 +18,8 @@
 
 static inline uint64_t read_system_counter()
 { // this is for arm64 arch
+    // std::string UNIQUE_VAR(Block, __LINE__) = __func__;
+    // std::cout << Block20 << std::endl;
     uint64_t val;
     __asm__ volatile(
         "mrs %0, cntvct_el0"
@@ -23,6 +29,8 @@ static inline uint64_t read_system_counter()
 
 int main(int argCnt, char **args)
 {
+    // printf("__func__ = %s\n", __func__);
+    BeginProfile();
     uint64_t start = read_system_counter();
 
     if (argCnt < 2)
@@ -51,9 +59,12 @@ int main(int argCnt, char **args)
     std::vector<std::string> tokens;
 
     uint64_t befFileRead = read_system_counter();
+
+    
     if (fileObj.read(jsonData.data(), fileLen))
     {
-        std::string token;
+        TimeBlock("file_parse")
+            std::string token;
         for (int i = 0; i < fileLen; i++)
         {
 
@@ -185,6 +196,7 @@ int main(int argCnt, char **args)
     printf("average = %.16f\n", average);
 
     uint64_t end = read_system_counter();
+
     std::cout << std::endl
               << "start: " << start << std::endl;
     std::cout << (befFileOpen - start) << std::endl;
@@ -201,6 +213,8 @@ int main(int argCnt, char **args)
     std::cout << "end: " << end << std::endl;
     std::cout << std::endl
               << "Total Cycles: " << (end - start) << std::endl;
+
+    EndAndPrintProfile();
 
     return 0;
 }

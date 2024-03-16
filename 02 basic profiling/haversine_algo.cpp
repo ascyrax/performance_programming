@@ -1,5 +1,6 @@
 #include <math.h>
 #define f64 double
+#include "nested_profiler.cpp"
 
 static f64 Square(f64 A)
 {
@@ -16,6 +17,7 @@ static f64 RadiansFromDegrees(f64 Degrees)
 // NOTE(casey): EarthRadius is generally expected to be 6372.8
 static f64 ReferenceHaversine(f64 X0, f64 Y0, f64 X1, f64 Y1, f64 EarthRadius = 6372.8)
 {
+    TimeFunction
     /* NOTE(casey): This is not meant to be a "good" way to calculate the Haversine distance.
        Instead, it attempts to follow, as closely as possible, the formula used in the real-world
        question on which these homework exercises are loosely based.
