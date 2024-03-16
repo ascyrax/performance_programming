@@ -177,8 +177,8 @@ int main(int argCnt, char **args)
 
     std::size_t lenResults = results.size();
     double average = 0;
-    for (int i = 0; i < lenResults; i++)
-        printf("%.16f\n", results[i]);
+    // for (int i = 0; i < lenResults; i++)
+    //     printf("%.16f\n", results[i]);
 
     for (int i = 0; i < lenResults; i++)
         average += results[i] / (lenResults * 1.0);

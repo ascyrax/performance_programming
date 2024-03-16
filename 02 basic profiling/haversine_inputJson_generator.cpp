@@ -58,7 +58,12 @@ void generate_harvesine_json_input(int &nCords, int &seed, std::vector<double> &
 int main(int argv, char **argc)
 {
     int nCords = atoi(argc[1]); // no of cordinates
-    int seed = atoi(argc[2]);   // seed for the marsenne random no generator
+    if (nCords > 2e7)
+    {
+        printf("file size too big :) to generate safely\n");
+        return 1;
+    }
+    int seed = atoi(argc[2]); // seed for the marsenne random no generator
     std::vector<double> results;
 
     generate_harvesine_json_input(nCords, seed, results);
@@ -69,8 +74,8 @@ int main(int argv, char **argc)
         average += results[i] / (lenResults * 1.0);
     printf("average = %.16f\n", average);
 
-    for (int i = 0; i < lenResults; i++)
-        printf("%.16f\n", results[i]);
+    // for (int i = 0; i < lenResults; i++)
+    //     printf("%.16f\n", results[i]);
 
     return 0;
 }
