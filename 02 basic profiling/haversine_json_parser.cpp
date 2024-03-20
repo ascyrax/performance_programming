@@ -3,11 +3,13 @@
 #include <iostream>
 #include <vector>
 #include <stack>
-#include "haversine_algo.cpp"
 // #include "nested_profiler.cpp"
 
 #define UNIQUE_VAR2(A, B) A##B
 #define UNIQUE_VAR(A, B) UNIQUE_VAR2(A, B)
+
+#define PROFILER 1
+#include "haversine_algo.cpp"
 
 // static inline uint64_t rdtsc() // this is for x86 arch
 // {
@@ -41,8 +43,11 @@ int main(int argCnt, char **args)
     }
     char *fileName = args[1];
     uint64_t befFileOpen = read_system_counter();
-
-    std::ifstream fileObj(fileName, std::ios::ate);
+    std::ifstream fileObj;
+    {
+        TimeBandwidth("open file",0);
+        fileObj.open(fileName, std::ios::ate);
+    }
     if (!fileObj)
     {
         printf("error: could not open file = %s\n", fileName);
@@ -60,11 +65,15 @@ int main(int argCnt, char **args)
 
     uint64_t befFileRead = read_system_counter();
 
-    
-    if (fileObj.read(jsonData.data(), fileLen))
     {
-        TimeBlock("file_parse")
-            std::string token;
+        TimeBandwidth("fileRead", fileLen);
+        fileObj.read(jsonData.data(), fileLen);
+    }
+    // if (fileObj.read(jsonData.data(), fileLen))
+    if (fileObj.good())
+    {
+        TimeBandwidth("file_parse", fileLen);
+        std::string token;
         for (int i = 0; i < fileLen; i++)
         {
 
@@ -148,10 +157,12 @@ int main(int argCnt, char **args)
         // for (std::string token : tokens)
         //     std::cout << token << std::endl;
     }
-    uint64_t afterFileRead = read_system_counter();
-
-    fileObj.close();
-    uint64_t afterFileClose = read_system_counter();
+    // uint64_t afterFileRead = read_system_counter();
+    {
+        TimeBandwidth("fileClose", fileLen);
+        fileObj.close();
+    }
+    // uint64_t afterFileClose = read_system_counter();
 
     std::vector<double> results;
     double x0, y0, x1, y1;
@@ -160,31 +171,35 @@ int main(int argCnt, char **args)
     //     printf("i = %d, token[%d] =", i, i);
     //     std::cout << tokens[i] << std::endl;
     // }
-    for (int i = 0; i < tokens.size(); i += 8)
     {
-        for (int j = i; j < i + 8; j += 2)
+        TimeBandwidth("ReferenceHaversine", 8 * tokens.size() / 2);
+        std::cout << 8 * tokens.size() / 2 << std::endl;
+        for (int i = 0; i < tokens.size(); i += 8)
         {
-            if (tokens[j] == "x0")
+            for (int j = i; j < i + 8; j += 2)
             {
-                x0 = std::stod(tokens[j + 1]);
+                if (tokens[j] == "x0")
+                {
+                    x0 = std::stod(tokens[j + 1]);
+                }
+                else if (tokens[j] == "y0")
+                {
+                    y0 = std::stod(tokens[j + 1]);
+                }
+                else if (tokens[j] == "x1")
+                {
+                    x1 = std::stod(tokens[j + 1]);
+                }
+                else if (tokens[j] == "y1")
+                {
+                    y1 = std::stod(tokens[j + 1]);
+                }
             }
-            else if (tokens[j] == "y0")
-            {
-                y0 = std::stod(tokens[j + 1]);
-            }
-            else if (tokens[j] == "x1")
-            {
-                x1 = std::stod(tokens[j + 1]);
-            }
-            else if (tokens[j] == "y1")
-            {
-                y1 = std::stod(tokens[j + 1]);
-            }
+            // std::cout << std::fixed << std::setprecision(16) << "x0: " << x0 << ", y0 : " << y0 << ", x1 : " << x1 << ", y1 : " << y1 << std::endl;
+            results.push_back(ReferenceHaversine(x0, y0, x1, y1));
         }
-        // std::cout << std::fixed << std::setprecision(16) << "x0: " << x0 << ", y0 : " << y0 << ", x1 : " << x1 << ", y1 : " << y1 << std::endl;
-        results.push_back(ReferenceHaversine(x0, y0, x1, y1));
     }
-    uint64_t afterCalculation = read_system_counter();
+    // uint64_t afterCalculation = read_system_counter();
 
     std::size_t lenResults = results.size();
     double average = 0;
@@ -195,24 +210,24 @@ int main(int argCnt, char **args)
         average += results[i] / (lenResults * 1.0);
     printf("average = %.16f\n", average);
 
-    uint64_t end = read_system_counter();
+    // uint64_t end = read_system_counter();
 
-    std::cout << std::endl
-              << "start: " << start << std::endl;
-    std::cout << (befFileOpen - start) << std::endl;
-    std::cout << "befFileOpen: " << befFileOpen << std::endl;
-    std::cout << (befFileRead - befFileOpen) << std::endl;
-    std::cout << "befFileRead: " << befFileRead << std::endl;
-    std::cout << (afterFileRead - befFileRead) << std::endl;
-    std::cout << "afterFileRead: " << afterFileRead << std::endl;
-    std::cout << afterFileClose - afterFileRead << std::endl;
-    std::cout << "afterFileClose: " << afterFileClose << std::endl;
-    std::cout << (afterCalculation - afterFileClose) << std::endl;
-    std::cout << "afterCalculation: " << afterCalculation << std::endl;
-    std::cout << end - afterCalculation << std::endl;
-    std::cout << "end: " << end << std::endl;
-    std::cout << std::endl
-              << "Total Cycles: " << (end - start) << std::endl;
+    // std::cout << std::endl
+    //           << "start: " << start << std::endl;
+    // std::cout << (befFileOpen - start) << std::endl;
+    // std::cout << "befFileOpen: " << befFileOpen << std::endl;
+    // std::cout << (befFileRead - befFileOpen) << std::endl;
+    // std::cout << "befFileRead: " << befFileRead << std::endl;
+    // std::cout << (afterFileRead - befFileRead) << std::endl;
+    // std::cout << "afterFileRead: " << afterFileRead << std::endl;
+    // std::cout << afterFileClose - afterFileRead << std::endl;
+    // std::cout << "afterFileClose: " << afterFileClose << std::endl;
+    // std::cout << (afterCalculation - afterFileClose) << std::endl;
+    // std::cout << "afterCalculation: " << afterCalculation << std::endl;
+    // std::cout << end - afterCalculation << std::endl;
+    // std::cout << "end: " << end << std::endl;
+    // std::cout << std::endl
+    //           << "Total Cycles: " << (end - start) << std::endl;
 
     EndAndPrintProfile();
 
