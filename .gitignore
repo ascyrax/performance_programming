@@ -2,3 +2,4 @@ gitignores
 supplementaries
 *.out
 *.json
+haversine_data.json
